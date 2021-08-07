@@ -1,0 +1,29 @@
+{
+  "name": "vuetifygentable",
+  "version": "1.0.0",
+  "description": "This is a generic table that can fetch data from api using VuetifyTableApi nuget package.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ndepaz/vuetifygentable.git"
+  },
+  "keywords": [
+    "Vuetify",
+    "Server",
+    "Side",
+    "Search"
+  ],
+  "author": "Noe de Paz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ndepaz/vuetifygentable/issues"
+  },
+  "homepage": "https://github.com/ndepaz/vuetifygentable#readme",
+  "dependencies": {
+    "vue-context": "^6.0.0",
+    "vuetify": "^2.5.8"
+  }
+}
