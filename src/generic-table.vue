@@ -15,7 +15,7 @@
       :custom-filter="customFilter"
       :loading="isLoading"
       loading-text="Loading... Please wait"
-      @pagination="paginationMethod"
+      
     >
       <!--top item-key="id" -->
       <template v-slot:top>
@@ -103,13 +103,7 @@ export default {
     };
   },
   methods: {
-    paginationMethod(pagination){
-        this.SearchResultsCount = pagination.itemsLength;
-        if(this.SearchResultsCount == 0){
-
-        }
-        console.log("pagination items ",this.SearchResultsCount );
-    },
+    
     refresh(maxRecords) {
       this.fetchItemsByTerm({
         search: this.search,
@@ -178,11 +172,12 @@ export default {
       return newObject;
     },
     customFilter(value, search, item) {
+      console.log(value,search)
         return (
           value != null &&
           search != null &&
           typeof value === "string" &&
-          value.toString().indexOf(search) !== -1
+          value.toString().toLowerCase().indexOf(search.toLowerCase()) !== -1
         );
     },
   },
