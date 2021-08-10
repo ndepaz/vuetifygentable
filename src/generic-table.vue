@@ -149,7 +149,6 @@ export default {
     async searchItems(searchTerm) {
       let search =
         typeof searchTerm == "string " ? this.searchTerm : this.search;
-      console.log("searching on ", search);
       let minSearch = this.minCharSearch ? this.minCharSearch : 1;
       if (search && search.length >= minSearch) {
         return await this.fetchItemsByTerm({ search, maxRecords: 10 });
@@ -172,7 +171,6 @@ export default {
       return newObject;
     },
     customFilter(value, search, item) {
-      console.log(value,search)
         return (
           value != null &&
           search != null &&
