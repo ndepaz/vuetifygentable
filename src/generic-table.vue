@@ -2,9 +2,9 @@
   <div
     :url="apiUrl"
     :serverSideMode="serverSideMode"
-    :startLoaded="startLoaded"
     :itemsPerPage="itemsPerPage"
     :maxRecords="maxRecords"
+    :httpMethod="httpMethod"
   >
     <v-data-table
       :headers="computedHeaders"
@@ -21,7 +21,7 @@
       <template v-slot:top>
         <div>
           <v-toolbar flat color="white">
-            <v-toolbar-title>{{ title }}</v-toolbar-title>
+            <v-toolbar-title v-if="title">{{ title }}</v-toolbar-title>
             <v-divider class="mx-4" inset vertical> </v-divider>
             <!--search bar-->
                 <v-col cols="6">
@@ -78,64 +78,99 @@ export default {
   components: {
     VDataTable,
   },
-  //inheritAttrs: false,
-  props: [
-    "title",
-    "topRightButton",
-    "showContextMenu",
-    "maxRecords",
-    "itemsPerPage",
-    "serverSideMode",
-    "startLoaded",
-    "minCharSearch",
-    "urlQuery",
-    "makeUrlQuery",
-  ],
+  props: {
+    title:{
+      type:String,
+    },
+    showContextMenu:{
+    },
+    maxRecords:{
+      type:Number,
+      default: 10
+    },
+    itemsPerPage:{
+      type:Number,
+    },
+    serverSideMode:{
+      type:Boolean,
+      default: false
+    },
+    minCharSearch:{
+      type:Number,
+      default: 1
+    },
+    urlQuery:{
+      type:String,
+    },
+    makeUrlQuery:{
+      type:Function,
+    },
+    value:{
+      type:Array,
+    },
+    httpMethod:{
+      type: String,
+      required: false,
+      default: "get"
+    }
+  },
   data() {
     return {
-      search: "",
+      searchValue: "",
       headers: [],
-      rows: [],
+      itemRows: [],
       selectedItem: null,
       apiUrl: null,
       isLoading: false,
       SearchResultsCount:  null,
+      query:null,
+      termsList:[],
+      setHeaders: true,
+      
     };
   },
   methods: {
-    
-    refresh(maxRecords) {
-      this.fetchItemsByTerm({
-        search: this.search,
-        maxRecords,
-        setHeaders: true,
-      });
+    selectItem(item, event) {
+      this.selectedItem = item;
+      this.handleClick(item, event);
     },
     handleClick: function (item, event) {
       if (this.showContextMenu) {
         this.$refs.menu.open(event, item);
       }
     },
-    selectItem(item, event) {
-      this.selectedItem = item;
-      this.handleClick(item, event);
+    refresh(maxRecords) {
+      this.setDefaultQuery();
+      this.fetchItemsByTerm();
     },
-    async fetchItemsByTerm(term) {
-      let { search, maxRecords, setHeaders } = term;
+    async searchItems(searchTerm) {
+      this.search=  typeof searchTerm == "string" ? searchTerm :this.search;
+      this.setDefaultQuery();
+      return await this.fetchItemsByTerm();
+    },
+    setDefaultQuery(){
+      let query ="/?search=" + this.search;
+      query += "&maxRecords=" + this.maxRecords;
+      this.query = query;
+    },
+    async fetchItemsByTerm() {
       this.isLoading = true;
-      let query = this.makeUrlQuery
-        ? this.makeUrlQuery(search)
-        : "/?search=" + search;
-      if (maxRecords) {
-        query += "&maxRecords=" + maxRecords;
+      let url = this.$attrs.url;
+      if(this.httpMethod == 'get'){
+        url+=this.query;
       }
-      return await this.$axios
-        .get(this.$attrs.url + query)
+
+      let axiosOptions = {
+        method:this.httpMethod,
+        url
+      };
+      if(this.httpMethod == 'post'){
+        axiosOptions.data = this.terms.length > 0 ?this.terms.length: this.defaultSearchTerms;
+      }
+      return await this.$axios(axiosOptions)
         .then((r) => {
           this.rows = r.data.rows;
-          if (setHeaders) {
-            this.headers = r.data.headers;
-          }
+          this.headers = r.data.headers;
           return true;
         })
         .catch((e) => {
@@ -145,16 +180,6 @@ export default {
         .finally((e) => {
           this.isLoading = false;
         });
-    },
-    async searchItems(searchTerm) {
-      let search =
-        typeof searchTerm == "string " ? this.searchTerm : this.search;
-      let minSearch = this.minCharSearch ? this.minCharSearch : 1;
-      if (search && search.length >= minSearch) {
-        return await this.fetchItemsByTerm({ search, maxRecords: 10 });
-      } else if (search.length == 0) {
-        return await this.fetchItemsByTerm({ search, maxRecords: 10 });
-      }
     },
     inspectItem(item) {
       let newObject = {};
@@ -181,33 +206,60 @@ export default {
   },
   watch: {
     headers(newValue, OldValue) {},
-    rows(newValue, OldValue) {},
-    search(newValue, OldValue) {
-    },
-    isLoading(newValue, OldValue) {},
+    isLoading(newValue, OldValue) {}, 
+    searchValue(newValue, OldValue) {}, 
+    value(val){
+      this.terms =val; 
+    }
   },
   computed: {
-    initialMaxRecords: function () {
-      return this.maxRecords != undefined || this.maxRecords != null
-        ? this.maxRecords
-        : 25;
+    defaultSearchTerms:{
+      get: function() {
+          return [
+              {searchBy:"*",valueOperator: "like", value:this.search,valueOperatorOption:["contains"],expressionOperator:null,},
+          ];
+      },
+    },
+    search:{
+      get: function() {
+          return this.searchValue;
+        },
+        set: function(newValue) {
+          this.searchValue = newValue;
+        }
+    },
+    rows:{
+      get: function() {
+          return this.itemRows;
+        },
+        set: function(newValue) {
+          this.itemRows = newValue;
+          // this.$emit("input",this.itemRows );
+        }
     },
     ItemsPerPageComputed: function () {
       return this.itemsPerPage != undefined || this.itemsPerPage != null
         ? this.itemsPerPage
-        : this.initialMaxRecords;
+        : this.maxRecords;
     },
     computedHeaders() {
       return this.headers.filter((t) => !t.shouldDeleteColumn);
+    },
+    terms: {
+        get: function() {
+          return this.termsList;
+        },
+        set: function(newValue) {
+          this.termsList = newValue;
+          this.$emit("input",this.termsList );
+        }
     },
   },
   components: {
     VueContext,
   },
   created() {
-    if (this.maxRecords !== null || this.maxRecords !== undefined)
-      this.refresh(this.maxRecords);
-    else this.refresh();
+    this.refresh(this.maxRecords);
   },
 };
 </script>
