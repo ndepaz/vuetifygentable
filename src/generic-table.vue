@@ -77,6 +77,7 @@ import VueContext from "vue-context";
 export default {
   components: {
     VDataTable,
+    VueContext,
   },
   props: {
     title:{
@@ -106,7 +107,6 @@ export default {
       type:Function,
     },
     value:{
-      type:Array,
     },
     httpMethod:{
       type: String,
@@ -165,8 +165,9 @@ export default {
         url
       };
       if(this.httpMethod == 'post'){
-        axiosOptions.data = this.terms.length > 0 ?this.terms.length: this.defaultSearchTerms;
+        axiosOptions.data = this.terms.length > 0 ?this.terms: this.defaultSearchTerms;
       }
+      
       return await this.$axios(axiosOptions)
         .then((r) => {
           this.rows = r.data.rows;
@@ -204,19 +205,23 @@ export default {
         );
     },
   },
-  watch: {
-    headers(newValue, OldValue) {},
-    isLoading(newValue, OldValue) {}, 
-    searchValue(newValue, OldValue) {}, 
-    value(val){
-      this.terms =val; 
-    }
-  },
+  
   computed: {
+    terms: {
+        get: function() {
+          
+          return this.termsList;
+        },
+        set: function(newValue) {
+          this.termsList = newValue;
+          
+          this.$emit("input",this.termsList );
+        }
+    },
     defaultSearchTerms:{
       get: function() {
           return [
-              {searchBy:"*",valueOperator: "like", value:this.search,valueOperatorOption:["contains"],expressionOperator:null,},
+              {FieldName:"*",ValueOperator: "contains", SearchValue:this.search,ExpressionOperator:"and",},
           ];
       },
     },
@@ -245,26 +250,26 @@ export default {
     computedHeaders() {
       return this.headers.filter((t) => !t.shouldDeleteColumn);
     },
-    terms: {
-        get: function() {
-          return this.termsList;
-        },
-        set: function(newValue) {
-          this.termsList = newValue;
-          this.$emit("input",this.termsList );
-        }
-    },
+    
   },
-  components: {
-    VueContext,
+  watch: {
+    headers(newValue, OldValue) {},
+    isLoading(newValue, OldValue) {}, 
+    searchValue(newValue, OldValue) {}, 
+    value(newValue){
+      this.terms =newValue;
+      
+    }
   },
   created() {
+    this.terms = this.value;
+    
     this.refresh(this.maxRecords);
   },
-};
+}
 </script>
 
-<style >
+<style>
 .selectedRow {
   background-color: lightgray;
   font-weight: bold;

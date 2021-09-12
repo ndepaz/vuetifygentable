@@ -22,12 +22,11 @@ Example, on the vue markup side.
     <v-col cols="12" sm="8" md="6"> </v-col>
     <gentable
       :url="endPointUrl"
-      title="Menus"
+      title="Addresses List"
       :showContextMenu="true"
       ref="table"
       :serverSideMode="true"
       :makeUrlQuery="makeUrlQuery"
-      :minCharSearch="1"
     >
       <v-btn color="blue" dark class="mr-4" slot="button" @click="reload">
         Refresh
@@ -127,4 +126,65 @@ public async Task<ActionResult<Table>> GetAddresses([FromQuery] DataRequest data
         tb.SetHeaders<Address>();
     return tb;
 }
+```
+
+You can use post method (``:method="post"``) to pass in terms as objects for search so server side can handle the search.
+``v-model="searchTerms"`` can be used to two way bind your search terms outside of gentable.
+
+```
+<template>
+ <gentable
+      :url="/addresses"
+      title="Addresses List"
+      :showContextMenu="true"
+      ref="table"
+      :serverSideMode="true"
+      :method="post"
+      v-model="searchTerms"
+    >
+     <v-btn color="blue" dark class="mr-4" 
+        slot="button" 
+        @click="advancedSearch"
+        v-model="searchTerms"
+        >
+        Refresh
+      </v-btn>
+    
+    </gentable>
+</template>
+<script>
+import gentable from "vuetifygentable";
+export default {
+  components: {
+    gentable,
+  },
+  data() {
+    return {
+      row: {},
+      selected: null,
+      searchTerms:[ //search terms can be two way binded as to compose complex searches terms
+        {FieldName:"*",ValueOperator: "contains", SearchValue:this.search,ExpressionOperator:"and",},
+      ]
+    };
+  },
+  methods: {
+    //we can trigger the search. The function will take terms in the v-model and send them via api.
+    advancedSearch(){
+      this.$refs.table.fetchItemsByTerm();
+    },
+    editRecord(row) {
+      //access the row item
+      let item = row.rowItem.data;
+      this.$axios
+        .get("/addresses/" + item.id)
+        .then((r) => {
+          console.log(r.data);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    },
+  },
+}
+</script>
 ```
