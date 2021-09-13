@@ -153,7 +153,7 @@ export default {
       query += "&maxRecords=" + this.maxRecords;
       this.query = query;
     },
-    async fetchItemsByTerm() {
+    fetchItemsByTerm() {
       this.isLoading = true;
       let url = this.$attrs.url;
       if(this.httpMethod == 'get'){
@@ -168,19 +168,22 @@ export default {
         axiosOptions.data = this.terms.length > 0 ?this.terms: this.defaultSearchTerms;
       }
       
-      return await this.$axios(axiosOptions)
+      return new Promise((resolve,reject)=>{
+        this.$axios(axiosOptions)
         .then((r) => {
           this.rows = r.data.rows;
           this.headers = r.data.headers;
+          resolve(r)
           return true;
         })
         .catch((e) => {
-          console.error(e);
+          reject(e);
           return false;
         })
         .finally((e) => {
           this.isLoading = false;
         });
+      });
     },
     inspectItem(item) {
       let newObject = {};
@@ -221,7 +224,7 @@ export default {
     defaultSearchTerms:{
       get: function() {
           return [
-              {FieldName:"*",ValueOperator: "contains", SearchValue:this.search,ExpressionOperator:"and",},
+              {FieldName:"*",ComparisonOperator: "contains", SearchValue:this.search,ClauseOperator:"and",},
           ];
       },
     },
