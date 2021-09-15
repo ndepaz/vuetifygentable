@@ -130,6 +130,12 @@ export default {
     };
   },
   methods: {
+    clearInputSearch(){
+      this.search = "";
+    },
+    clearTermsSearch(){
+      this.terms = [];
+    },
     selectItem(item, event) {
       this.selectedItem = item;
       this.handleClick(item, event);
@@ -173,10 +179,12 @@ export default {
         .then((r) => {
           this.rows = r.data.rows;
           this.headers = r.data.headers;
+          this.$emit('OnDataGet',r);
           resolve(r)
           return true;
         })
         .catch((e) => {
+          this.$emit('OnDataGetFail',e);
           reject(e);
           return false;
         })
@@ -191,11 +199,13 @@ export default {
       this.headers.forEach((element) => {
         i++;
         var key = element.value;
+        var objectKey = Object.keys(item).find(itemKey => itemKey.toLowerCase() === key.toLowerCase());
+        
         if (element.shouldDeleteColumn) {
           delete item[key];
-          newObject[i] = { prop: " d-none", value: item[key] };
+          newObject[i] = { prop: " d-none", value: item[objectKey] };
         }
-        newObject[i] = { prop: element.align, value: item[key] };
+        newObject[i] = { prop: element.align, value: item[objectKey] };
       });
       return newObject;
     },
@@ -224,7 +234,7 @@ export default {
     defaultSearchTerms:{
       get: function() {
           return [
-              {FieldName:"*",ComparisonOperator: "contains", SearchValue:this.search,ClauseOperator:"and",},
+              {FieldName:"*",ComparisonOperator: "contains", SearchValue:this.search,ClauseOperator:"And",},
           ];
       },
     },
