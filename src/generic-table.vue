@@ -20,7 +20,7 @@
       <!--top item-key="id" -->
       <template v-slot:top>
         <div>
-          <v-toolbar flat color="white">
+          <v-toolbar flat>
             <v-toolbar-title v-if="title">{{ title }}</v-toolbar-title>
             <v-divider class="mx-4" inset vertical> </v-divider>
             <!--search bar-->
