@@ -24,7 +24,7 @@
             <v-toolbar-title v-if="title">{{ title }}</v-toolbar-title>
             <v-divider class="mx-4" inset vertical> </v-divider>
             <!--search bar-->
-                <v-col cols="6">
+                <v-col cols="4">
               <v-card-title>
                 <v-text-field
                   v-model="search"
