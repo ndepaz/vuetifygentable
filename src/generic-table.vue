@@ -15,7 +15,9 @@
       :custom-filter="customFilter"
       :loading="isLoading"
       loading-text="Loading... Please wait"
-      
+      :item-key="itemKey"            
+      :expanded.sync="expanded"
+      :single-expand="singleExpand"
     >
       <!--top item-key="id" -->
       <template v-slot:top>
@@ -44,21 +46,30 @@
       </template>
       <!--/top-->
       <!-- Body -->
-      <template v-slot:body="{ items }">
-        <tbody>
+      <template v-slot:item="{ item, expand, isExpanded }">
           <tr
-            v-for="item in items"
-            :key="item.id"
             @contextmenu.prevent="selectItem(item, $event)"
             :class="{ selectedRow: item === selectedItem }"
           >
+            <td v-if="expandable">
+              <v-btn
+              fab
+              icon
+              x-small
+              elevation="2"
+               @click="expand(!isExpanded)"><v-icon>mdi-chevron-double-down</v-icon></v-btn>
+            </td>
             <td v-for="valuePair in inspectItem(item)" :class="valuePair.prop">
               {{ valuePair.value }}
             </td>
           </tr>
-        </tbody>
       </template>
       <!-- /Body -->
+      <template v-slot:expanded-item="{ headers, item }">
+        <td :colspan="headers.length">
+          <slot v-bind="{ headers, item }" name="expandable"></slot>
+        </td>
+      </template>
     </v-data-table>
 
     <vue-context ref="menu">
@@ -80,6 +91,9 @@ export default {
     VueContext,
   },
   props: {
+    itemKey:{
+      default:"id"
+    },
     title:{
       type:String,
     },
@@ -112,6 +126,10 @@ export default {
       type: String,
       required: false,
       default: "get"
+    },
+    expandable:{
+      type:Boolean,
+      default: false,
     }
   },
   data() {
@@ -126,7 +144,8 @@ export default {
       query:null,
       termsList:[],
       setHeaders: true,
-      
+      expanded: [],
+      singleExpand: true,
     };
   },
   methods: {
@@ -179,6 +198,9 @@ export default {
         .then((r) => {
           this.rows = r.data.rows;
           this.headers = r.data.headers;
+          if(this.expandable){
+            this.headers.unshift({ text: 'EXPAND', align: 'left', sortable: false, value: 'expand' })
+          }
           this.$emit('OnDataGet',r);
           resolve(r)
           return true;
@@ -195,9 +217,10 @@ export default {
     },
     inspectItem(item) {
       let newObject = {};
-      let i = 0;
-      this.headers.forEach((element) => {
-        i++;
+      let i = this.expandable? 1: 0; 
+      for(i = i;i<this.headers.length;i++) {
+        let element = this.headers[i];
+
         var key = element.value;
         var objectKey = Object.keys(item).find(itemKey => itemKey.toLowerCase() === key.toLowerCase());
         
@@ -206,7 +229,7 @@ export default {
           newObject[i] = { prop: " d-none", value: item[objectKey] };
         }
         newObject[i] = { prop: element.align, value: item[objectKey] };
-      });
+      }
       return newObject;
     },
     customFilter(value, search, item) {
@@ -252,7 +275,6 @@ export default {
         },
         set: function(newValue) {
           this.itemRows = newValue;
-          // this.$emit("input",this.itemRows );
         }
     },
     ItemsPerPageComputed: function () {
