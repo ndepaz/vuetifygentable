@@ -48,8 +48,9 @@
       <!-- Body -->
       <template v-slot:item="{ item, expand, isExpanded }">
           <tr
+            @click="rowClicked(item)"
             @contextmenu.prevent="selectItem(item, $event)"
-            :class="{ selectedRow: item === selectedItem }"
+            :class="selectedRowClass(item,selectedItem)+' grab'"
           >
             <td v-if="expandable">
               <v-btn
@@ -91,6 +92,12 @@ export default {
     VueContext,
   },
   props: {
+    selectedRowItems:{
+      type:Array,
+    },
+    onLeftClick:{
+      type:Function,
+    },
     itemKey:{
       default:"id"
     },
@@ -146,9 +153,37 @@ export default {
       setHeaders: true,
       expanded: [],
       singleExpand: true,
+      selectedRows: [],
     };
   },
   methods: {
+    toggleSelection(keyID) {
+      if (this.selectedRows.includes(keyID)) {
+        this.selectedRows = this.selectedRows.filter(
+          selectedKeyID => selectedKeyID !== keyID
+        );
+      } else {
+        this.selectedRows.push(keyID);
+      }
+      this.$emit('update:selectedRowItems',this.selectedRows);
+    },
+    rowClicked(item){
+      if(this.onLeftClick){
+        if(this.selectedRowItems){
+          this.toggleSelection(item[this.itemKey]);
+        } else {
+          this.selectedItem = item;
+          this.onLeftClick(this.selectedItem);
+        }
+      }
+    },
+    selectedRowClass(item,selectedItem){
+      if(this.selectedRowItems){
+        return this.selectedRows.indexOf(item[this.itemKey])>-1?'cyan':'';
+      }
+      let className = item === selectedItem?'selectedRow':'';
+      return className;
+    },
     clearInputSearch(){
       this.search = "";
     },
@@ -311,5 +346,8 @@ export default {
 }
 .d-none {
   display: none !important;
+}
+.grab {
+  cursor: pointer;
 }
 </style>
