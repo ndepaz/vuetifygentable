@@ -67,9 +67,7 @@
       </template>
       <!-- /Body -->
       <template v-slot:expanded-item="{ headers, item }">
-        <td :colspan="headers.length">
-          <slot v-bind="{ headers, item }" name="expandable"></slot>
-        </td>
+        <slot v-bind="{ headers, item }" name="expandable"></slot>
       </template>
     </v-data-table>
 
