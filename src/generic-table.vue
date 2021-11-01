@@ -266,10 +266,57 @@ export default {
       return newObject;
     },
     customFilter(value, search, item) {
-        return (
+      let found = 0;
+      let typeName = typeof(value);
+      
+      if(Array.isArray(value) && this.arrayFilter(value, search, item)){
+        found++;
+      }
+      if(typeName == "number" && this.numberFilter(value, search, item)){
+        found++;
+      }
+      if(typeName == "string" && this.stringFilter(value, search, item)){
+        found++;
+      }
+      
+      return found > 0;
+    },
+    getByValue4(arr, value) {
+      var o;
+
+      for (var i=0, iLen=arr.length; i<iLen; i++) {
+        o = arr[i];
+
+        for (var p in o) {
+          if (o.hasOwnProperty(p)) {
+            let propValue = o[p];
+            if(typeof(propValue) == "string" && propValue.toString().toLowerCase().indexOf(value.toLowerCase()) !== -1){
+              return propValue;
+            } else if (propValue == value){
+              return propValue;
+            }
+          }
+        }
+      }
+    },
+    arrayFilter(value, search) {
+         return (
           value != null &&
           search != null &&
-          typeof value === "string" &&
+          this.getByValue4(value,search) != undefined
+        );
+    },
+    numberFilter(value, search) {
+         return (
+          value != null &&
+          search != null &&
+          value ==search
+        );
+    },
+    stringFilter(value, search) {
+      return(
+          value != null &&
+          search != null &&
           value.toString().toLowerCase().indexOf(search.toLowerCase()) !== -1
         );
     },
