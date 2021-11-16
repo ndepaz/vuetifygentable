@@ -1,6 +1,6 @@
 {
   "name": "vuetifygentable",
-  "version": "2.5.5",
+  "version": "2.6.5",
   "description": "This is a generic table that can fetch data from api using VuetifyTableApi nuget package.",
   "main": "src/index.js",
   "scripts": {

@@ -27,16 +27,22 @@
             <v-divider class="mx-4" inset vertical> </v-divider>
             <!--search bar-->
                 <v-col cols="4">
-              <v-card-title>
-                <v-text-field
-                  v-model="search"
-                  append-icon="mdi-magnify"
-                  label="Search"
-                  single-line
-                  hide-details
-                  @keyup.enter="searchItems"
-                ></v-text-field>
-              </v-card-title>
+                <v-tooltip right>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-card-title>
+                          <v-text-field
+                            v-model="search"
+                            append-icon="mdi-magnify"
+                            label="Search"
+                            single-line
+                            hide-details
+                            @keyup.enter="searchItems"
+                            v-on="useTooltip(on)"
+                          ></v-text-field>
+                        </v-card-title>
+                    </template>
+                  <slot name="searchbar-tooltip"></slot>
+                </v-tooltip>
             </v-col>
             <!--/search bar-->
             <v-spacer></v-spacer>
@@ -135,6 +141,10 @@ export default {
     expandable:{
       type:Boolean,
       default: false,
+    },
+    searchBarToolTipSlot:{
+      type: Boolean,
+      default: false,
     }
   },
   data() {
@@ -155,6 +165,12 @@ export default {
     };
   },
   methods: {
+    useTooltip(on){
+      if(this.searchBarToolTipSlot){
+        return on;
+      }
+      return {};
+    },
     toggleSelection(keyID) {
       if (this.selectedRows.includes(keyID)) {
         this.selectedRows = this.selectedRows.filter(
